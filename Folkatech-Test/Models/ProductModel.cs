@@ -8,7 +8,7 @@ namespace Folkatech_Test.Models
 {
     public class ProductModel
     {
-        public string SKU { get; set; }
+        public int SKU { get; set; }
         public int CategoryId { get; set; }
         public string? CategoryName { get; set; }
         public string? Name { get; set; }

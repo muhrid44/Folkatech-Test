@@ -1,8 +1,11 @@
 ﻿using Folkatech_Test.DummyRepository;
 using Folkatech_Test.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,100 +13,118 @@ namespace Folkatech_Test.Services
 {
     public class Service
     {
-        public List<CategoryModel> ShowAllCategory()
+        public async Task<List<CategoryModel>> ShowAllCategory()
         {
-            return CategoryRepository.categoryModels;
+            //INPUT YOUR API URL
+            var url = "https://localhost:7149/api/FolkaShop/showAllCategory";
+            var client = new HttpClient();
+            var result = new List<CategoryModel>();
+
+            using (var request = new HttpRequestMessage(HttpMethod.Get, url))
+            {
+                var message = await client.SendAsync(request);
+                var hhtpResult = await message.Content.ReadAsStringAsync();
+
+                result = JsonConvert.DeserializeObject<List<CategoryModel>>(hhtpResult);
+
+                return result;
+
+            }
         }
 
-        public List<ProductModel> ShowProducts()
+        public async Task<List<ProductModel>> ShowProducts()
         {
             Console.Clear();
 
-            var categoryList = CategoryRepository.categoryModels;
-            var products = ProductRepository.productModel;
+            //INPUT YOUR API URL
+            var url = "https://localhost:7149/api/FolkaShop/showAllCategory";
+            var client = new HttpClient();
+            var result = new List<CategoryModel>();
+
+            using (var request = new HttpRequestMessage(HttpMethod.Get, url))
+            {
+                var message = await client.SendAsync(request);
+                var hhtpResult = await message.Content.ReadAsStringAsync();
+
+                result = JsonConvert.DeserializeObject<List<CategoryModel>>(hhtpResult);
+
+            }
 
             Console.WriteLine("Id\t Category");
 
-            foreach (var category in categoryList)
+            foreach (var category in result)
             {
-                Console.WriteLine($"{category.Id}\t {category.Category}");
+                Console.WriteLine($"{category.Id}\t {category.CategoryName}");
             }
 
             Console.Write("Please select category number :");
 
             int selectedNumber = Convert.ToInt32(Console.ReadLine());
 
-            var productSelected = products.Where(product => product.CategoryId == selectedNumber).ToList();
-
-            return productSelected;
-        }
-        
-        public string CreateCategory()
-        {
-            CategoryModel newCategory = new CategoryModel();
-
-            var categoryList = CategoryRepository.categoryModels;
-
-            var latestCategory = categoryList.OrderByDescending(category => category.Id).First();
-
-            int newId = latestCategory.Id + 1;
-
-            newCategory.Id = newId;
-
-            Console.Write("Please input your category : ");
-            newCategory.Category = Console.ReadLine();
-
-            newCategory.Filter = $"All SKU’s in the range {newId}xxxx";
-
-            categoryList.Add(newCategory);
-
-            return "Category has been created!";
-
+            return await SelectCategory(selectedNumber);
         }
 
-        public string CreateProduct(ProductModel newProduct)
+        public async Task<List<ProductModel>> SelectCategory(int id)
         {
-            var categoryList = CategoryRepository.categoryModels;
-            var products = ProductRepository.productModel;
+            //INPUT YOUR API URL
+            var url = $"https://localhost:7149/api/FolkaShop/showProducts?id={id}";
+            var client = new HttpClient();
+            var result = new List<ProductModel>();
 
-            var isCategoryAvailable = categoryList.Select(x => x.Id == newProduct.CategoryId).ToList();
-
-            if (isCategoryAvailable.Count == 0)
+            using (var request = new HttpRequestMessage(HttpMethod.Get, url))
             {
-                return "Category Not Available";
+
+                var message = await client.SendAsync(request);
+                var hhtpResult = await message.Content.ReadAsStringAsync();
+
+                result = JsonConvert.DeserializeObject<List<ProductModel>>(hhtpResult);
+
             }
 
-            var productInCategoryCheck = products.Where(x => x.CategoryId == newProduct.CategoryId).ToList();
+            return result;
+        }
 
-            if(productInCategoryCheck.Count() == 0)
+
+
+        public async Task<string> CreateCategory()
+        {
+
+            Console.Write("Please input your category name : ");
+            var CategoryName = Console.ReadLine();
+
+            //INPUT YOUR API URL
+            var url = $"https://localhost:7149/api/FolkaShop/createCategory?categoryName={CategoryName}";
+            var client = new HttpClient();
+
+            using (var request = new HttpRequestMessage(HttpMethod.Post, url))
             {
-                var categoryIdLength = newProduct.CategoryId.ToString().Length;
-                var newProductSKU = "1".PadLeft(5 - categoryIdLength, '0');
-                var newSKU = newProduct.CategoryId.ToString() + newProductSKU;
-
-                newProduct.SKU = newSKU;
-
-                var newCategoryName = categoryList.Where(x => x.Id == newProduct.CategoryId).Single();
-
-                newProduct.CategoryName = newCategoryName.Category;
-
-                products.Add(newProduct);
-                return "Product has been Created!";
+                var message = await client.SendAsync(request);
+                return "Category has been created!";
             }
 
-            var productInCategory = products.OrderByDescending(x => Convert.ToInt32(x.SKU)).Where(x => x.CategoryId == newProduct.CategoryId).First();
+        }
 
-            var categoryName = categoryList.Where(x => x.Id == newProduct.CategoryId).Single();
+        public async Task<string> CreateProduct(ProductModel newProduct)
+        {
+            //INPUT YOUR API URL
+            var url = $"https://localhost:7149/api/FolkaShop/createProduct";
+            var client = new HttpClient();
 
-            newProduct.CategoryName = categoryName.Category;
 
-            var latestSKU = Convert.ToInt32(productInCategory.SKU) + 1;
+            using (var request = new HttpRequestMessage(HttpMethod.Post, url))
+            {
+                var json = JsonConvert.SerializeObject(newProduct);
+                using (var stringContent = new StringContent(json, Encoding.UTF8, "application/json"))
+                {
+                    request.Content = stringContent;
+                    var message = await client.SendAsync(request);
+                    var hhtpResult = await message.Content.ReadAsStringAsync();
 
-            newProduct.SKU = latestSKU.ToString();
+                    return "Product has been created!";
 
-            products.Add(newProduct);
+                }
 
-            return "Product has been Created!";
+            }
 
         }
 

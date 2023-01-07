@@ -1,6 +1,7 @@
 ﻿using Folkatech_Test.ControllerWebAPI;
 using Folkatech_Test.DummyRepository;
 using Folkatech_Test.Models;
+using Folkatech_Test.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,10 +14,9 @@ namespace Folkatech_Test
     {
         public Home()
         {
-            Menu();
         }
 
-        public void Menu()
+        public async Task Menu()
         {
             Console.Clear();
 
@@ -32,14 +32,15 @@ namespace Folkatech_Test
 
             if(numberSelected == "1")
             {
-                WebAPI controllerWebAPI = new WebAPI();
-                var result = controllerWebAPI.ShowAllCategory();
+                Service controllerWebAPI = new Service();
+
+                var result = await controllerWebAPI.ShowAllCategory();
 
                 Console.WriteLine("{0,20}{1,40}", "Category", "Filter");
 
                 foreach (var category in result)
                 {
-                    Console.WriteLine("{0,20}{1,40}", category.Category, category.Filter);
+                    Console.WriteLine("{0,20}{1,40}", category.CategoryName, category.Filter);
 
                 }
 
@@ -48,8 +49,9 @@ namespace Folkatech_Test
             }
             if(numberSelected == "2")
             {
-                WebAPI controllerWebAPI = new WebAPI();
-                var result = controllerWebAPI.ShowProducts();
+                Service controllerWebAPI = new Service();
+
+                var result = await controllerWebAPI.ShowProducts();
 
                 if(result.Count() > 0)
                 {
@@ -74,44 +76,35 @@ namespace Folkatech_Test
             }
             if (numberSelected == "3")
             {
-                WebAPI controllerWebAPI = new WebAPI();
-                var result = controllerWebAPI.CreateCategory();
+                Service controllerWebAPI = new Service();
+                var result = await controllerWebAPI.CreateCategory();
                 Console.WriteLine(result);
                 BackToMenu();
 
             }
             if (numberSelected == "4")
             {
-                WebAPI controllerWebAPI = new WebAPI();
+                Service controllerWebAPI = new Service();
 
-                ProductModel input = new ProductModel();
-
-                var categoryList = CategoryRepository.categoryModels;
-                var products = ProductRepository.productModel;
-
-                Console.WriteLine("Id\t Category");
-
-                foreach (var category in categoryList)
-                {
-                    Console.WriteLine($"{category.Id}\t {category.Category}");
-                }
+                ProductModel productModel = new ProductModel();
 
                 Console.Write("Please select category number : ");
 
-                input.CategoryId = Convert.ToInt32(Console.ReadLine());
+                productModel.CategoryId = Convert.ToInt32(Console.ReadLine());
 
                 Console.Write("Please input product name : ");
-                input.Name = Console.ReadLine();
+                productModel.Name = Console.ReadLine();
 
 
                 Console.Write("Please input description : ");
-                input.Description = Console.ReadLine();
+                productModel.Description = Console.ReadLine();
 
                 Console.Write("Please input price (in IDR) : ");
-                input.Price = Convert.ToDecimal(Console.ReadLine());
+                productModel.Price = Convert.ToDecimal(Console.ReadLine());
 
 
-                var result = controllerWebAPI.CreateProduct(input);
+                var result = await controllerWebAPI.CreateProduct(productModel);
+
                 Console.WriteLine(result);
                 BackToMenu();
 
@@ -134,7 +127,7 @@ namespace Folkatech_Test
 
             Console.WriteLine();
 
-            Menu();
+            Menu().Wait();
         }
 
     }

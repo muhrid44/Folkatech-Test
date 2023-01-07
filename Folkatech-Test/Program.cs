@@ -2,10 +2,11 @@
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             //press CTRL+F5 to start the application 
             Home startProgram = new Home();
+            await startProgram.Menu();
         }
     }
 }
